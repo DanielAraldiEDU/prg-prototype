@@ -42,7 +42,7 @@ struct Map
 {
   int height;
   int width;
-  Block blocks[6][10];
+  Block **blocks;
 };
 
 struct Phase
@@ -128,16 +128,13 @@ Map createMap(int width, int height)
       Block block;
       int pickBlock = generateRandomNumber(5);
 
-      if (!pickBlock)
-        block = {BlockType::ROCK, nullptr};
-      else
-        block = {BlockType::PATH, nullptr};
+      block = {!pickBlock ? BlockType::ROCK : BlockType::PATH, nullptr};
 
       blocks[i][j] = block;
     }
   }
 
-  return {height, width, **blocks};
+  return {height, width, blocks};
 }
 
 Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
@@ -146,20 +143,21 @@ Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
 
   for (int i = 0; i < amountOfEnemies; i++)
   {
-    int randomWidth = generateRandomNumber(width);
-    int randomHeight = generateRandomNumber(height);
+    int randomWidth, randomHeight;
 
+    bool noEnemy = true;
     do
     {
+      noEnemy = true;
       randomWidth = generateRandomNumber(width);
       randomHeight = generateRandomNumber(height);
 
       if (map.blocks[randomWidth][randomHeight].blockType == BlockType::PATH)
       {
         map.blocks[randomWidth][randomHeight] = {BlockType::ENEMY, (enemies + i)};
-        cout << (enemies + i)->name << endl;
+        noEnemy = false;
       }
-    } while (map.blocks[randomWidth][randomHeight].blockType != BlockType::PATH);
+    } while (noEnemy);
   }
 
   return {"Fase do Campo", map, amountOfEnemies, enemies};
@@ -179,10 +177,10 @@ int main()
 
   Player player = {1, 100, enemyPlayer};
 
-  Phase phase;
+  Enemy *enemies = new Enemy[5];
   for (int i = 0; i < 5; i++)
-    phase.enemies[i] = goblerto;
+    enemies[i] = goblerto;
 
-  // createPhase(5, phase.enemies, 6, 10);
+  Phase phase = createPhase(5, enemies, 6, 10);
   // playThePhase(player, phase);
 }
