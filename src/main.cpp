@@ -1,8 +1,20 @@
 #include <iostream>
 #include <string>
+#include <conio.h>
+#include <locale.h>
 #include <time.h>
+#include <windows.h>
 
 using namespace std;
+
+enum Sides
+{
+  UP,
+  DOWN,
+  RIGHT,
+  LEFT,
+  INVALID
+};
 
 struct Weapon
 {
@@ -29,7 +41,8 @@ enum BlockType
 {
   ROCK,
   PATH,
-  ENEMY
+  ENEMY,
+  PLAYER
 };
 
 struct Block
@@ -59,7 +72,10 @@ template <typename T, typename R>
 R attack(T attacker, R defender);
 Map createMap(int width, int height);
 void playThePhase(Player player, Phase phase);
+void movePlayer(Player player, Phase phase);
+void renderMap(BlockType blockType);
 int generateRandomNumber(int number);
+Sides findPlayerSide(char key);
 Phase createPhase(int amountOfEnemies, Enemy enemies[], int width, int height);
 
 template <typename T>
@@ -126,9 +142,9 @@ Map createMap(int width, int height)
     for (int j = 0; j < height; j++)
     {
       Block block;
-      int pickBlock = generateRandomNumber(5);
+      int pickBlock = generateRandomNumber(100) + 1;
 
-      block = {!pickBlock ? BlockType::ROCK : BlockType::PATH, nullptr};
+      block = {pickBlock >= 80 ? BlockType::ROCK : BlockType::PATH};
 
       blocks[i][j] = block;
     }
@@ -163,9 +179,85 @@ Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
   return {"Fase do Campo", map, amountOfEnemies, enemies};
 }
 
+void renderMap(BlockType blockType)
+{
+  switch (blockType)
+  {
+  case BlockType::ROCK:
+  {
+    cout << "O";
+    // cout << "\U0001FAA8";
+    break;
+  }
+  case BlockType::ENEMY:
+  {
+    cout << "E";
+    // cout << "\U0001F479";
+    break;
+  }
+  case BlockType::PATH:
+  {
+    cout << "=";
+    // cout << "\U0001F43E";
+    break;
+  }
+  default:
+  {
+    cout << "H";
+    // cout << "\U0001F9B8";
+    break;
+  }
+  }
+}
+
+Sides findPlayerSide(char key)
+{
+  if (kbhit())
+    key = getch();
+
+  if (key == 'w' || key == 'W')
+    return Sides::UP;
+  else if (key == 'a' || key == 'A')
+    return Sides::LEFT;
+  else if (key == 's' || key == 'S')
+    return Sides::DOWN;
+  else if (key == 'd' || key == 'D')
+    return Sides::RIGHT;
+  else
+    return Sides::INVALID;
+}
+
+void movePlayer(Player player, Phase phase)
+{
+  bool alreadyPlayerOnMap = false;
+  while (player.life > 0)
+  {
+    system("cls");
+    char keyMovement = 0;
+
+    for (int i = 0; i < phase.map.width; i++)
+    {
+      for (int j = 0; j < phase.map.height; j++)
+      {
+        if (!alreadyPlayerOnMap && phase.map.blocks[i][j].blockType == BlockType::PATH)
+        {
+          phase.map.blocks[i][j] = {BlockType::PLAYER, nullptr};
+          alreadyPlayerOnMap = true;
+        }
+
+        renderMap(phase.map.blocks[i][j].blockType);
+      }
+      cout << endl;
+    }
+
+    Sides side = findPlayerSide(keyMovement);
+  }
+}
+
 int main()
 {
   srand(time(NULL));
+  setlocale(LC_ALL, "Portuguese");
 
   Weapon enemyWeapon = {1, 5}, enemyPlayer = {4, 10};
 
@@ -175,12 +267,14 @@ int main()
         goblinio = {"Goblinio", 50, enemyWeapon},
         boss = {"Juca", 95, enemyWeapon};
 
-  Player player = {1, 100, enemyPlayer};
+  Player player = {1, 100, enemyPlayer, {0}};
 
   Enemy *enemies = new Enemy[5];
+
   for (int i = 0; i < 5; i++)
     enemies[i] = goblerto;
 
   Phase phase = createPhase(5, enemies, 6, 10);
+  movePlayer(player, phase);
   // playThePhase(player, phase);
 }
