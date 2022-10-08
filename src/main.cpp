@@ -27,7 +27,7 @@ struct Player
   int level;
   int life;
   Weapon weapon;
-  int coordinates[1][1];
+  COORD coordinates;
 };
 
 struct Enemy
@@ -60,7 +60,6 @@ struct Map
 
 struct Phase
 {
-  string name;
   Map map;
   int amountOfEnemies;
   Enemy *enemies;
@@ -68,15 +67,15 @@ struct Phase
 
 template <typename T>
 bool isDead(T personage);
+bool playThePhase(Player player, Enemy enemy);
+int generateRandomNumber(int number);
+Map createMap(int width, int height);
+Phase createPhase(int amountOfEnemies, Enemy enemies[], int width, int height);
 template <typename T, typename R>
 R attack(T attacker, R defender);
-Map createMap(int width, int height);
-void playThePhase(Player player, Phase phase);
+Sides findPlayerSide(char key);
 void movePlayer(Player player, Phase phase);
 void renderMap(BlockType blockType);
-int generateRandomNumber(int number);
-Sides findPlayerSide(char key);
-Phase createPhase(int amountOfEnemies, Enemy enemies[], int width, int height);
 
 template <typename T>
 bool isDead(T personage)
@@ -98,33 +97,32 @@ R attack(T attacker, R defender)
   return defender;
 }
 
-void playThePhase(Player player, Phase phase)
+bool playThePhase(Player player, Enemy enemy)
 {
-  cout << "Começou " << phase.name << endl
+  cout << "Começou a Batalha!!" << endl
        << endl;
 
-  for (int current = 0; current < 5; current++)
+  while (!isDead<Enemy>(enemy))
   {
-    while (!isDead(phase.enemies[current]))
+    player = attack<Enemy, Player>(enemy, player);
+    enemy = attack<Player, Enemy>(player, enemy);
+
+    cout << "O jogador atacou " << enemy.name << " e ele ficou com " << enemy.life << " de vida!" << endl;
+    cout << "O " << enemy.name << " atacou o jogador ao mesmo tempo e o deixou com " << player.life << " de vida!" << endl;
+
+    if (isDead<Player>(player))
     {
-      player = attack(phase.enemies[current], player);
-      phase.enemies[current] = attack(player, phase.enemies[current]);
+      cout << "O jogador morreu, o jogo acabou!";
 
-      cout << "O jogador atacou " << phase.enemies[current].name << " e ele ficou com " << phase.enemies[current].life << " de vida" << endl;
-      cout << "O " << phase.enemies[current].name << " atacou o jogador ao mesmo tempo e o deixou com " << player.life << " de vida" << endl;
-
-      if (isDead(player))
-      {
-        cout << "O jogador morreu, o jogo acabou";
-        return;
-      }
+      return false;
     }
-
-    cout << phase.enemies[current].name << " foi morto" << endl
-         << endl;
   }
 
-  cout << "O jogador passou a fase";
+  cout << enemy.name << " foi morto!" << endl;
+  cout << "O jogador ganhou a batalha!!!" << endl
+       << endl;
+
+  return true;
 }
 
 int generateRandomNumber(int number)
@@ -134,12 +132,12 @@ int generateRandomNumber(int number)
 
 Map createMap(int width, int height)
 {
-  Block **blocks = new Block *[width];
+  Block **blocks = new Block *[height];
 
-  for (int i = 0; i < width; i++)
+  for (int i = 0; i < height; i++)
   {
-    blocks[i] = new Block[height];
-    for (int j = 0; j < height; j++)
+    blocks[i] = new Block[width];
+    for (int j = 0; j < width; j++)
     {
       Block block;
       int pickBlock = generateRandomNumber(100) + 1;
@@ -168,15 +166,15 @@ Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
       randomWidth = generateRandomNumber(width);
       randomHeight = generateRandomNumber(height);
 
-      if (map.blocks[randomWidth][randomHeight].blockType == BlockType::PATH)
+      if (map.blocks[randomHeight][randomWidth].blockType == BlockType::PATH)
       {
-        map.blocks[randomWidth][randomHeight] = {BlockType::ENEMY, (enemies + i)};
+        map.blocks[randomHeight][randomWidth] = {BlockType::ENEMY, (enemies + i)};
         noEnemy = false;
       }
     } while (noEnemy);
   }
 
-  return {"Fase do Campo", map, amountOfEnemies, enemies};
+  return {map, amountOfEnemies, enemies};
 }
 
 void renderMap(BlockType blockType)
@@ -229,28 +227,194 @@ Sides findPlayerSide(char key)
 
 void movePlayer(Player player, Phase phase)
 {
-  bool alreadyPlayerOnMap = false;
-  while (player.life > 0)
-  {
-    system("cls");
-    char keyMovement = 0;
+  system("cls");
 
-    for (int i = 0; i < phase.map.width; i++)
+  bool alreadyPlayerOnMap = false;
+
+  for (int i = 0; i < phase.map.height; i++)
+  {
+    for (int j = 0; j < phase.map.width; j++)
     {
-      for (int j = 0; j < phase.map.height; j++)
+      if (!alreadyPlayerOnMap)
       {
-        if (!alreadyPlayerOnMap && phase.map.blocks[i][j].blockType == BlockType::PATH)
+        int randomWidth = generateRandomNumber(phase.map.width);
+        int randomHeight = generateRandomNumber(phase.map.height);
+        if (phase.map.blocks[randomHeight][randomWidth].blockType == BlockType::PATH)
         {
-          phase.map.blocks[i][j] = {BlockType::PLAYER, nullptr};
+          phase.map.blocks[randomHeight][randomWidth] = {BlockType::PLAYER, nullptr};
+          player.coordinates.X = randomHeight;
+          player.coordinates.Y = randomWidth;
           alreadyPlayerOnMap = true;
         }
-
-        renderMap(phase.map.blocks[i][j].blockType);
       }
-      cout << endl;
+
+      renderMap(phase.map.blocks[i][j].blockType);
     }
+    cout << endl;
+  }
+
+  while (player.life > 0)
+  {
+    char keyMovement = 0;
+    int enemiesOnMap = 0;
+    bool playerWon;
 
     Sides side = findPlayerSide(keyMovement);
+
+    if (side == Sides::RIGHT && (phase.map.blocks[player.coordinates.X][player.coordinates.Y + 1].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X][player.coordinates.Y + 1].blockType == BlockType::PATH) && (player.coordinates.Y + 1) < phase.map.width)
+    {
+      system("cls");
+
+      if (phase.map.blocks[player.coordinates.X][player.coordinates.Y + 1].blockType == BlockType::PATH)
+      {
+        player.coordinates.Y = player.coordinates.Y + 1;
+        phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1] = {BlockType::PATH, nullptr};
+        phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+      }
+      else
+      {
+        playerWon = playThePhase(player, *(phase.map.blocks[player.coordinates.X][player.coordinates.Y + 1].enemy));
+        if (playerWon)
+        {
+          player.coordinates.Y = player.coordinates.Y + 1;
+          phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1] = {BlockType::PATH, nullptr};
+          phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+        }
+        else
+        {
+          return;
+        }
+      }
+
+      for (int i = 0; i < phase.map.height; i++)
+      {
+        for (int j = 0; j < phase.map.width; j++)
+        {
+          renderMap(phase.map.blocks[i][j].blockType);
+        }
+        cout << endl;
+      }
+    }
+    else if (side == Sides::LEFT && (phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1].blockType == BlockType::PATH) && (player.coordinates.Y - 1) >= 0)
+    {
+      system("cls");
+
+      if (phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1].blockType == BlockType::PATH)
+      {
+        player.coordinates.Y = player.coordinates.Y - 1;
+        phase.map.blocks[player.coordinates.X][player.coordinates.Y + 1] = {BlockType::PATH, nullptr};
+        phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+      }
+      else
+      {
+        playerWon = playThePhase(player, *(phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1].enemy));
+        if (playerWon)
+        {
+          player.coordinates.Y = player.coordinates.Y - 1;
+          phase.map.blocks[player.coordinates.X][player.coordinates.Y + 1] = {BlockType::PATH, nullptr};
+          phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+        }
+        else
+        {
+          return;
+        }
+      }
+
+      for (int i = 0; i < phase.map.height; i++)
+      {
+        for (int j = 0; j < phase.map.width; j++)
+        {
+          renderMap(phase.map.blocks[i][j].blockType);
+        }
+        cout << endl;
+      }
+    }
+    else if (side == Sides::UP && (phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y].blockType == BlockType::PATH) && (player.coordinates.X - 1) >= 0)
+    {
+      system("cls");
+
+      if (phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y].blockType == BlockType::PATH)
+      {
+        player.coordinates.X = player.coordinates.X - 1;
+        phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y] = {BlockType::PATH, nullptr};
+        phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+      }
+      else
+      {
+        playerWon = playThePhase(player, *(phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y].enemy));
+        if (playerWon)
+        {
+          player.coordinates.X = player.coordinates.X - 1;
+          phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y] = {BlockType::PATH, nullptr};
+          phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+        }
+        else
+        {
+          return;
+        }
+      }
+
+      for (int i = 0; i < phase.map.height; i++)
+      {
+        for (int j = 0; j < phase.map.width; j++)
+        {
+          renderMap(phase.map.blocks[i][j].blockType);
+        }
+        cout << endl;
+      }
+    }
+    else if (side == Sides::DOWN && (phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y].blockType == BlockType::PATH) && (player.coordinates.X + 1) < phase.map.width)
+    {
+      system("cls");
+
+      if (phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y].blockType == BlockType::PATH)
+      {
+        player.coordinates.X = player.coordinates.X + 1;
+        phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y] = {BlockType::PATH, nullptr};
+        phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+      }
+      else
+      {
+        playerWon = playThePhase(player, *(phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y].enemy));
+        if (playerWon)
+        {
+          player.coordinates.X = player.coordinates.X + 1;
+          phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y] = {BlockType::PATH, nullptr};
+          phase.map.blocks[player.coordinates.X][player.coordinates.Y] = {BlockType::PLAYER, nullptr};
+        }
+        else
+        {
+          return;
+        }
+      }
+
+      for (int i = 0; i < phase.map.height; i++)
+      {
+        for (int j = 0; j < phase.map.width; j++)
+        {
+          renderMap(phase.map.blocks[i][j].blockType);
+        }
+        cout << endl;
+      }
+    }
+
+    for (int i = 0; i < phase.map.height; i++)
+    {
+      for (int j = 0; j < phase.map.width; j++)
+      {
+        if (phase.map.blocks[i][j].blockType == BlockType::ENEMY)
+          enemiesOnMap++;
+      }
+    }
+
+    if (!enemiesOnMap)
+    {
+      cout << endl;
+      system("pause");
+      system("cls");
+      cout << "Parabêns, você venceu a fase!!" << endl;
+      return;
+    }
   }
 }
 
@@ -267,14 +431,12 @@ int main()
         goblinio = {"Goblinio", 50, enemyWeapon},
         boss = {"Juca", 95, enemyWeapon};
 
-  Player player = {1, 100, enemyPlayer, {0}};
+  Player player = {1, 100, enemyPlayer, {0, 0}};
 
   Enemy *enemies = new Enemy[5];
 
   for (int i = 0; i < 5; i++)
     enemies[i] = goblerto;
 
-  Phase phase = createPhase(5, enemies, 6, 10);
-  movePlayer(player, phase);
-  // playThePhase(player, phase);
+  movePlayer(player, createPhase(5, enemies, 10, 6));
 }
