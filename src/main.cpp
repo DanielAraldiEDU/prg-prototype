@@ -7,6 +7,8 @@
 
 using namespace std;
 
+#define AMOUNT_OF_ENEMIES 5
+
 enum Sides
 {
   UP,
@@ -184,25 +186,21 @@ void renderMap(BlockType blockType)
   case BlockType::ROCK:
   {
     cout << "O";
-    // cout << "\U0001FAA8";
     break;
   }
   case BlockType::ENEMY:
   {
     cout << "E";
-    // cout << "\U0001F479";
     break;
   }
   case BlockType::PATH:
   {
     cout << "=";
-    // cout << "\U0001F43E";
     break;
   }
   default:
   {
     cout << "H";
-    // cout << "\U0001F9B8";
     break;
   }
   }
@@ -423,20 +421,20 @@ int main()
   srand(time(NULL));
   setlocale(LC_ALL, "Portuguese");
 
-  Weapon enemyWeapon = {1, 5}, enemyPlayer = {4, 10};
+  Enemy goblins[5] = {{"Goblin", 15, {1, 5}},
+                      {"Goblerto", 25, {3, 7}},
+                      {"Gobo", 40, {5, 8}},
+                      {"Goblinio", 50, {6, 9}},
+                      {"Goblen", 75, {7, 10}}};
 
-  Enemy goblin = {"Goblin", 20, enemyWeapon},
-        goblerto = {"Goblerto", 30, enemyWeapon},
-        gobo = {"Gobo", 40, enemyWeapon},
-        goblinio = {"Goblinio", 50, enemyWeapon},
-        boss = {"Juca", 95, enemyWeapon};
-
-  Player player = {1, 100, enemyPlayer, {0, 0}};
+  Player player = {1, 100, {5, 15}, {0, 0}};
 
   Enemy *enemies = new Enemy[5];
 
-  for (int i = 0; i < 5; i++)
-    enemies[i] = goblerto;
+  for (int i = 0; i < AMOUNT_OF_ENEMIES; i++)
+  {
+    enemies[i] = goblins[i];
+  }
 
-  movePlayer(player, createPhase(5, enemies, 10, 6));
+  movePlayer(player, createPhase(AMOUNT_OF_ENEMIES, enemies, 10, 6));
 }
