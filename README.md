@@ -2,7 +2,7 @@
 
 [![wakatime](https://wakatime.com/badge/user/920a7e43-2969-4212-82ff-1b375685ff58/project/7be698d6-5baf-4d54-8205-701a376cd9e3.svg)](https://wakatime.com/badge/user/920a7e43-2969-4212-82ff-1b375685ff58/project/7be698d6-5baf-4d54-8205-701a376cd9e3)
 
-Protótipo de RPG de ponteiros e alocação dinâmica feito em C++ por [Daniel Sansão Araldi](https://github.com/DanielAraldi), [Mateus Vanunci](https://github.com/vanunci) e Leticia Murbach.
+Protótipo de RPG de ponteiros e alocação dinâmica feito em C++ por [Daniel Sansão Araldi](https://github.com/DanielAraldi), [Mateus Vanunci](https://github.com/vanunci) e [Leticia Murbach](https://github.com/leticiamurbacht).
 
 ### Descrição
 

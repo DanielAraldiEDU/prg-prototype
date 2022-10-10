@@ -160,8 +160,8 @@ Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
   for (int i = 0; i < amountOfEnemies; i++)
   {
     int randomWidth, randomHeight;
-
     bool noEnemy = true;
+
     do
     {
       noEnemy = true;
@@ -237,6 +237,7 @@ void movePlayer(Player player, Phase phase)
       {
         int randomWidth = generateRandomNumber(phase.map.width);
         int randomHeight = generateRandomNumber(phase.map.height);
+
         if (phase.map.blocks[randomHeight][randomWidth].blockType == BlockType::PATH)
         {
           phase.map.blocks[randomHeight][randomWidth] = {BlockType::PLAYER, nullptr};
