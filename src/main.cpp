@@ -80,9 +80,9 @@ void movePlayer(Player player, Phase phase);
 void renderMap(BlockType blockType);
 
 template <typename T>
-bool isDead(T personage)
+bool isDead(T character)
 {
-  if (personage.life < 0)
+  if (character.life < 0)
     return true;
   else
     return false;
