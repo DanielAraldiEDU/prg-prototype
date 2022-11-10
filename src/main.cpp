@@ -76,6 +76,7 @@ Phase createPhase(int amountOfEnemies, Enemy enemies[], int width, int height);
 template <typename T, typename R>
 R attack(T attacker, R defender);
 Sides findPlayerSide(char key);
+void buildMap(Block *blocks, int initalWidth, int finalWidth);
 void movePlayer(Player player, Phase phase);
 void renderMap(BlockType blockType);
 
@@ -206,6 +207,20 @@ void renderMap(BlockType blockType)
   }
 }
 
+void buildMap(Block *blocks, int initialWidth, int finalWidth)
+{
+  if (initialWidth + 1 == finalWidth)
+  {
+    renderMap(blocks[initialWidth].blockType);
+    initialWidth = finalWidth;
+    cout << endl;
+    return;
+  }
+
+  renderMap(blocks[initialWidth].blockType);
+  buildMap(blocks, initialWidth + 1, finalWidth);
+}
+
 Sides findPlayerSide(char key)
 {
   if (kbhit())
@@ -286,13 +301,7 @@ void movePlayer(Player player, Phase phase)
       }
 
       for (int i = 0; i < phase.map.height; i++)
-      {
-        for (int j = 0; j < phase.map.width; j++)
-        {
-          renderMap(phase.map.blocks[i][j].blockType);
-        }
-        cout << endl;
-      }
+        buildMap(phase.map.blocks[i], 0, phase.map.width);
     }
     else if (side == Sides::LEFT && (phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X][player.coordinates.Y - 1].blockType == BlockType::PATH) && (player.coordinates.Y - 1) >= 0)
     {
@@ -320,13 +329,7 @@ void movePlayer(Player player, Phase phase)
       }
 
       for (int i = 0; i < phase.map.height; i++)
-      {
-        for (int j = 0; j < phase.map.width; j++)
-        {
-          renderMap(phase.map.blocks[i][j].blockType);
-        }
-        cout << endl;
-      }
+        buildMap(phase.map.blocks[i], 0, phase.map.width);
     }
     else if (side == Sides::UP && (phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X - 1][player.coordinates.Y].blockType == BlockType::PATH) && (player.coordinates.X - 1) >= 0)
     {
@@ -354,13 +357,7 @@ void movePlayer(Player player, Phase phase)
       }
 
       for (int i = 0; i < phase.map.height; i++)
-      {
-        for (int j = 0; j < phase.map.width; j++)
-        {
-          renderMap(phase.map.blocks[i][j].blockType);
-        }
-        cout << endl;
-      }
+        buildMap(phase.map.blocks[i], 0, phase.map.width);
     }
     else if (side == Sides::DOWN && (phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y].blockType == BlockType::ENEMY || phase.map.blocks[player.coordinates.X + 1][player.coordinates.Y].blockType == BlockType::PATH) && (player.coordinates.X + 1) < phase.map.width)
     {
@@ -388,13 +385,7 @@ void movePlayer(Player player, Phase phase)
       }
 
       for (int i = 0; i < phase.map.height; i++)
-      {
-        for (int j = 0; j < phase.map.width; j++)
-        {
-          renderMap(phase.map.blocks[i][j].blockType);
-        }
-        cout << endl;
-      }
+        buildMap(phase.map.blocks[i], 0, phase.map.width);
     }
 
     for (int i = 0; i < phase.map.height; i++)
