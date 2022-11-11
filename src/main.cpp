@@ -145,7 +145,12 @@ Map createMap(int width, int height)
       Block block;
       int pickBlock = generateRandomNumber(100) + 1;
 
-      block = {pickBlock >= 50 ? BlockType::ROCK : BlockType::PATH};
+      bool mustBePath = (i == 0 && j == 0) || (i == height - 1 && j == width - 1);
+
+      if (mustBePath)
+        block = {BlockType::PATH};
+      else
+        block = {pickBlock >= 50 ? BlockType::ROCK : BlockType::PATH};
 
       blocks[i][j] = block;
     }
@@ -162,6 +167,7 @@ Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
   {
     int randomWidth, randomHeight;
     bool noEnemy = true;
+    bool itsFree = false;
 
     do
     {
@@ -169,7 +175,9 @@ Phase createPhase(int amountOfEnemies, Enemy *enemies, int width, int height)
       randomWidth = generateRandomNumber(width);
       randomHeight = generateRandomNumber(height);
 
-      if (map.blocks[randomHeight][randomWidth].blockType == BlockType::PATH)
+      itsFree = map.blocks[randomHeight][randomWidth].blockType == BlockType::PATH && (randomHeight != 0 && randomWidth != 0) && (randomHeight != height - 1 && randomWidth != width - 1);
+
+      if (itsFree)
       {
         map.blocks[randomHeight][randomWidth] = {BlockType::ENEMY, (enemies + i)};
         noEnemy = false;
@@ -242,24 +250,13 @@ void movePlayer(Player player, Phase phase)
 {
   system("cls");
 
-  bool alreadyPlayerOnMap = false;
-
   for (int i = 0; i < phase.map.height; i++)
   {
     for (int j = 0; j < phase.map.width; j++)
     {
-      if (!alreadyPlayerOnMap)
+      if (i == 0 && j == 0)
       {
-        int randomWidth = generateRandomNumber(phase.map.width);
-        int randomHeight = generateRandomNumber(phase.map.height);
-
-        if (phase.map.blocks[randomHeight][randomWidth].blockType == BlockType::PATH)
-        {
-          phase.map.blocks[randomHeight][randomWidth] = {BlockType::PLAYER, nullptr};
-          player.coordinates.X = randomHeight;
-          player.coordinates.Y = randomWidth;
-          alreadyPlayerOnMap = true;
-        }
+        phase.map.blocks[i][j] = {BlockType::PLAYER};
       }
 
       renderMap(phase.map.blocks[i][j].blockType);
@@ -428,5 +425,7 @@ int main()
     enemies[i] = goblins[i];
   }
 
-  movePlayer(player, createPhase(AMOUNT_OF_ENEMIES, enemies, 10, 6));
+  Phase phase = createPhase(AMOUNT_OF_ENEMIES, enemies, 10, 6);
+
+  movePlayer(player, phase);
 }
