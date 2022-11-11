@@ -145,7 +145,7 @@ Map createMap(int width, int height)
       Block block;
       int pickBlock = generateRandomNumber(100) + 1;
 
-      block = {pickBlock >= 80 ? BlockType::ROCK : BlockType::PATH};
+      block = {pickBlock >= 50 ? BlockType::ROCK : BlockType::PATH};
 
       blocks[i][j] = block;
     }
