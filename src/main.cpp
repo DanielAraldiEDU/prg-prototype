@@ -83,10 +83,7 @@ void renderMap(BlockType blockType);
 template <typename T>
 bool isDead(T character)
 {
-  if (character.life < 0)
-    return true;
-  else
-    return false;
+  return character.life < 0 ? true : false;
 }
 
 template <typename T, typename R>
@@ -145,12 +142,17 @@ Map createMap(int width, int height)
       Block block;
       int pickBlock = generateRandomNumber(100) + 1;
 
-      bool mustBePath = (i == 0 && j == 0) || (i == height - 1 && j == width - 1);
-
-      if (mustBePath)
+      if (i == height - 1 && j == width - 1)
+      {
         block = {BlockType::PATH};
+      }
       else
-        block = {pickBlock >= 50 ? BlockType::ROCK : BlockType::PATH};
+      {
+        if (i == 0 && j == 0)
+          block = {BlockType::PLAYER};
+        else
+          block = {pickBlock >= 50 ? BlockType::PATH : BlockType::ROCK};
+      }
 
       blocks[i][j] = block;
     }
@@ -251,18 +253,7 @@ void movePlayer(Player player, Phase phase)
   system("cls");
 
   for (int i = 0; i < phase.map.height; i++)
-  {
-    for (int j = 0; j < phase.map.width; j++)
-    {
-      if (i == 0 && j == 0)
-      {
-        phase.map.blocks[i][j] = {BlockType::PLAYER};
-      }
-
-      renderMap(phase.map.blocks[i][j].blockType);
-    }
-    cout << endl;
-  }
+    buildMap(phase.map.blocks[i], 0, phase.map.width);
 
   while (player.life > 0)
   {
